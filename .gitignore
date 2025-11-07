@@ -1,0 +1,4 @@
+build/*
+cmake/*
+.clang
+compile_commands.json

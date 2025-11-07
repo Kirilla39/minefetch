@@ -1,9 +1,11 @@
 #include <iostream>
+#include <ostream>
 #include <string>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <minefetch/fetch_out.hpp>
 #include <minefetch/minecraft_motd.hpp>
 
 
@@ -17,9 +19,10 @@ int main(int argc, char* argv[]) {
         MinecraftMotd mcm;
         const char* host = argv[1];
         unsigned int port = (argc > 2) ? atoi(argv[2]) : 25565;
-        
+	
         std::string motd = mcm.getMotd(host, port);
-        std::cout << "MOTD: " << motd << std::endl;
+		MotdConfig oconf = MotdConfig();
+		FetchOut fetchOut = FetchOut(oconf, nlohmann::json::parse(motd), std::string(host));
     }
 	catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;

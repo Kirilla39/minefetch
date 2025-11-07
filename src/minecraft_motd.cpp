@@ -1,13 +1,10 @@
-#include <cstdint>
-#include <stdexcept>
-#include <string>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <cstring>
-#include <vector>
 #include <minefetch/minecraft_motd.hpp>
+#include <stdexcept>
+#include <cstring>
 
 
 uint64_t MinecraftMotd::packVarInt(uint32_t number){
@@ -31,6 +28,7 @@ uint64_t MinecraftMotd::unpackVarInt(int sock, int* valread){
 
   while (temp & 0x80) {
 	*valread = read(sock, &temp, 1);
+	if(*valread <= 0){return 0;}
 	varint |= (temp & 0x7F) << (7*i);
 	i++;
   }
@@ -59,18 +57,19 @@ void MinecraftMotd::packByteToData(uint64_t dataByte, std::vector<uint8_t> &data
   }
 }
 
+
 std::string MinecraftMotd::getMotd(const char* host, unsigned int port){
   int sock = 0;
   struct sockaddr_in serv_addr; 
   sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock < 0) {
-	throw std::runtime_error("Socket creation failed");
+    throw std::runtime_error("Socket creation failed");
   }
 
   struct hostent* hostp = gethostbyname(host);
   if(!hostp){
-	close(sock);
-	throw std::runtime_error("Host resolution failed");
+    close(sock);
+    throw std::runtime_error("Host resolution failed");
   }
 
   serv_addr.sin_family = AF_INET;
@@ -78,7 +77,7 @@ std::string MinecraftMotd::getMotd(const char* host, unsigned int port){
   memcpy(&serv_addr.sin_addr.s_addr, hostp->h_addr_list[0], hostp->h_length); 
 
   if(connect(sock,(struct sockaddr*)&serv_addr,sizeof(serv_addr))){
-	throw std::runtime_error("Connection failed");
+    throw std::runtime_error("Connection failed");
   }
 
   uint32_t protocol_ver_varint = packVarInt(760);
@@ -87,7 +86,6 @@ std::string MinecraftMotd::getMotd(const char* host, unsigned int port){
   uint8_t next_state = packVarInt(1);
   uint32_t request_length = bytesLength(packet_id) + bytesLength(protocol_ver_varint) + bytesLength(server_adress_size) + server_adress_size + 3;
   uint32_t total_length = bytesLength(request_length) + request_length;
-
 
   std::vector<uint8_t> data;
   data.reserve(total_length);
@@ -106,13 +104,36 @@ std::string MinecraftMotd::getMotd(const char* host, unsigned int port){
   send(sock, status_data, 2, 0);
  
   int valread;
-  unpackVarInt(sock, &valread);
-  uint8_t temp;
-  valread = read(sock, &temp, 1);
+  uint64_t packet_length = unpackVarInt(sock, &valread);
+  if(valread <= 0) {
+    close(sock);
+    throw std::runtime_error("Failed to read packet length");
+  }
+
+  uint64_t response_packet_id = unpackVarInt(sock, &valread);
+  if(valread <= 0 || response_packet_id != 0) {
+    close(sock);
+    throw std::runtime_error("Invalid response packet ID");
+  }
+
   uint64_t stringLength = unpackVarInt(sock, &valread);
+  if(valread <= 0) {
+    close(sock);
+    throw std::runtime_error("Failed to read string length");
+  }
+
   std::vector<char> buffer(stringLength);
-  valread = read(sock, buffer.data(), stringLength);
+  
+  size_t totalRead = 0;
+  while(totalRead < stringLength) {
+    valread = read(sock, buffer.data() + totalRead, stringLength - totalRead);
+    if(valread <= 0) {
+      close(sock);
+      throw std::runtime_error("Failed to read complete response");
+    }
+    totalRead += valread;
+  }
 
   close(sock);
-  return std::string(buffer.data()); 
+  return std::string(buffer.data(), stringLength); 
 }
