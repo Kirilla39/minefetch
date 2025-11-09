@@ -15,15 +15,8 @@ FetchOut::FetchOut(MotdConfig conf, nlohmann::json result, std::string serverip)
   logoKitty(result["favicon"].get<std::string>().substr(22));
   oss << "\033[u";
 
-  int move_up = config.modules.size();
-  if (result["description"].dump().find("\\n") != std::string::npos){
-    for(ModulesProperty module : config.modules){if (module.type == DESCRIPTION) move_up++;}
-  }
-
-  oss << "\033[" << (( config.logo.height < move_up ? config.logo.height : move_up )-1) << "A";
- 
   std::string desc;
-  std::string lpadding = "\033[" + std::to_string(config.logo.height * 2 + 1) + "C";
+  std::string lpadding = "\033[" + std::to_string(config.logo.padding.left + config.logo.padding.right + config.logo.height * 2 + 1) + "C";
   
   for(ModulesProperty module : config.modules){
     oss << lpadding << module.key << " ";
@@ -60,10 +53,15 @@ FetchOut::FetchOut(MotdConfig conf, nlohmann::json result, std::string serverip)
     oss << "\r\n";
   }
 
-  std::cout << oss.str() << std::endl;
+  std::cout << oss.str();
 }
 
 void FetchOut::logoKitty(std::string img_base64){
+  for(int i = 0; i < config.logo.padding.top; ++i){
+	oss << "\n";
+  }
+
+  if (config.logo.padding.left > 0) oss << "\033[" + std::to_string(config.logo.padding.left) + "C";
   int rows = config.logo.height;
   int cols = config.logo.height * 2;
   

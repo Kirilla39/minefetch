@@ -14,3 +14,5 @@ set(SOURCES src/fetch_out.cpp src/main.cpp src/minecraft_motd.cpp src/motd_confi
 add_executable(minefetch ${SOURCES})
 
 target_include_directories(minefetch PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+install(TARGETS minefetch RUNTIME DESTINATION bin)

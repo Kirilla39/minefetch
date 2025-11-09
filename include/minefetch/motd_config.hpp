@@ -9,6 +9,7 @@ struct Logo{
   int8_t color;
   uint8_t height;
   struct{
+	uint8_t top;
 	uint8_t left;
 	uint8_t right;
   } padding;
@@ -35,9 +36,10 @@ struct ModulesProperty{
 
 class MotdConfig{
 public:
-Logo logo;
-std::vector<ModulesProperty> modules;
-std::string default_ip;
-MotdConfig(std::string path = "~/.config/minefetch/config.json");
-void setIp(std::string address);
+  Logo logo;
+  std::vector<ModulesProperty> modules;
+  std::string default_ip;
+  MotdConfig(std::string path = "~/.config/minefetch/config.json");
+  void setIp(std::string address);
+  void generateDefault();
 };
