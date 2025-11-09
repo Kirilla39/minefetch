@@ -1,4 +1,4 @@
-#Minefetch
+# Minefetch
 
 Minefetch is a fastfetch-inspired tool for fetching minecraft server motd and displaying it with other data in your terminal without the need to launch the game.
 *Currently works only with Kitty*
