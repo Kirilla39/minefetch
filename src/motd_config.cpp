@@ -97,5 +97,3 @@ void MotdConfig::generateDefault(){
 	  file.close();
   }
 }
-
-void MotdConfig::setIp(std::string address){default_ip = address;}

@@ -40,6 +40,5 @@ public:
   std::vector<ModulesProperty> modules;
   std::string default_ip;
   MotdConfig(std::string path = "~/.config/minefetch/config.json");
-  void setIp(std::string address);
   void generateDefault();
 };
