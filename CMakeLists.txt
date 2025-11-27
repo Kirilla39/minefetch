@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(nlohmann_json REQUIRED)
 
 
-set(USER_CONFIG_DIR $ENV{HOME}/.config/aseprite-wal)
+set(USER_CONFIG_DIR $ENV{HOME}/.config/minefetch)
 
 set(SOURCES src/fetch_out.cpp src/main.cpp src/minecraft_motd.cpp src/motd_config.cpp src/utils.cpp)
 
